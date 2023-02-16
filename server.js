@@ -39,12 +39,12 @@ app.param("collectionName", function (req, res, next, collectionName) {
     req.collection = db.collection(collectionName);
     return next();
   });
-  
+
   app.get("/", function (req, res, next) {
     res.send("choose collection e.g /collections/lessons");
-    
+
   });
-  
+
   app.get("/collections/:collectionName", function (req, res, next) {
 
     req.collection.find({}).toArray(function (err, results) {
@@ -58,7 +58,7 @@ app.param("collectionName", function (req, res, next, collectionName) {
   async function searchLesson(searchTerm) { // search lesson function allows the mongodb used to search for the lessons matching in the database from the collections
     return client
       .db("project")
-      .collection("lessons") 
+      .collection("lessons")
       .find({
         topic: { $regex: searchTerm, $options: "is" },
       })
@@ -108,36 +108,37 @@ app.put("/collections/:collectionName/:id", function (req, res, next) {
       }
     );
   });
-  
+
   app.get(
-    "/collections/:collectionName/search/:query",
+    "/collections/:collectionName/search",
     function (req, res, next) {
       //const searchText = req.query.search;
-      let searchText = req.params.query;
-  
+      let searchText = req.query.search;
+
       let query = {};
       query = {
         $or: [
-          { topic: { $regex: searchText, $options: "i" } },
+          { subject: { $regex: searchText, $options: "i" } },
           { location: { $regex: searchText, $options: "i" } },
         ],
       };
-      req.collection.find(query, {}).toArray(function (err, results) {
+      req.collection.find(query).toArray(function (err, results) {
         if (err) {
           return next(err);
         }
+        console.log(results)
         res.send(results);
       });
     }
   );
-  app.get("/collections/:collectionName/search", function (req, res, next) {
-    req.collection.find({}).toArray(function (err, results) {
-      if (err) {
-        return next(err);
-      }
-      res.send(results);
-    });
-  });
+  // app.get("/collections/:collectionName/search", function (req, res, next) {
+  //   req.collection.find({}).toArray(function (err, results) {
+  //     if (err) {
+  //       return next(err);
+  //     }
+  //     res.send(results);
+  //   });
+  // });
   app.post("/collections/:collectionName", function (req, res, next) {
     xyz = req.body;
     // req.body.id = new ObjectId();
@@ -186,8 +187,9 @@ res.send((result.deletedCount === 1) ? {msg: "success"} : {msg: "error"});
 app.put('/collections/:collectionName/:id'
 , function(req, res, next) {
 // TODO: Validate req.body
+
 req.collection.updateOne({_id: new ObjectId(req.params.id)},
-{$set: req.body},
+{$set: {name: req.body.name, phone: req.body.phone, id: req.body.id, space: req.body.space}},
 {safe: true, multi: false}, function(err, result) {
 if (err) {
 return next(err);
@@ -222,7 +224,7 @@ app.use(function (req, res, next) {
     console.log("Request Date:" + new Date());
     next();
   });
-  
+
   // Static file middleware
   /* app.use(function(req, res, next){
     var filePath = path.join(__dirname, "images", req.url);
@@ -243,17 +245,17 @@ app.use(function (req, res, next) {
     res.send("file not found");
   })
  */
-  app.get("http://newcw2-env.eba-sw23cwmq.eu-west-2.elasticbeanstalk.com/search/:searchTerm", async (req, res) => {  
+  app.get("http://newcw2-env.eba-sw23cwmq.eu-west-2.elasticbeanstalk.com/search/:searchTerm", async (req, res) => {
     const result = await searchLesson(req.params.searchTerm);
     res.send(result);
   });
 
   var staticPath = path.join(__dirname, "images");
   app.use(express.static(staticPath));
-  
-  
+
+
   const port = process.env.PORT || 3000;
 app.listen(port, function() {
 console.log("App started on port: " + port);
 });
-  
+
